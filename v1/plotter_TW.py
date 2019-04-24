@@ -24,6 +24,23 @@ class Plotter:
         If the configuration file contains wrong data.
 
       """
+      if not isinstance(str,inputFile):
+        logging.error('Name of Input file must be string')
+        raise TypeError
+      else:
+        self.inputFile = inputFile
+
+      try:
+        with open(inputFile) as inpf:
+          try:
+            pass
+          except:
+            logging.error('File contains bad data')
+            raise ValueError
+      except IOError:
+        logging.error('Input file not found')
+        raise IOError
+
 
 
   def generatePlot(self,xLabel,yLabel):
