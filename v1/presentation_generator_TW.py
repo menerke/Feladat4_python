@@ -34,6 +34,26 @@ class PresentationGenerator:
         If the outputFileName has not .pptx extension.
       
       """
+    self._logger = logging.getLogger(self.__class__.__name__)
+    if not type(outputFileName) is str:
+      self._logger.error('Name of Output file must be string')
+      raise TypeError
+    else:
+      if outputFileName.endswith('.pptx'):
+        self._outputFileName = outputFileName
+      else:
+        raise ValueError
+
+    """
+    EZ a rész bizonytalan, nem látom az IOError milyen fájl írást ellenőrizzen, nem elég ez a "  def finalize(self):"-ben?
+    try:
+      VALAMI
+    except IOError as e:
+      self._logger.error("I/O error({0}): {1}".format(e.errno, e.strerror))  
+    """
+
+    self._presentation = Presentation(self._outputFileName)
+
     #self._logger = logging.getLogger(self.__class__.__name__)
     #self._io = PresentationIO()
     #self._presentation = Presentation("PYTHON-Course.template")
@@ -63,6 +83,16 @@ class PresentationGenerator:
       SystemError
         If the slide generation is not successful. 
       """
+    slideLayout = self._presentation.slide_layouts[layout]
+    try:
+      slide = self._presentation.slides.add_slide(slideLayout)
+      slide.shapes.title.text = title
+      slide.placeholders[1].text = subTitle
+      self._logger.info("Title page is added ({0}, {1})".format(title, subTitle))
+      return True
+    except:
+      raise SystemError
+      return False
     #titleSlideLayout = self._presentation.slide_layouts[0]
     #slide = self._presentation.slides.add_slide(titleSlideLayout)
     #titleShape = slide.shapes.title
@@ -96,6 +126,24 @@ class PresentationGenerator:
         If the slide generation is not successful. 
       
       """
+    slideLayout = self._presentation.slide_layouts[layout]
+    try:
+      slide = self._presentation.slides.add_slide(slideLayout)
+      slide.shapes.title.text = title
+      slide.placeholders[1].text = text
+      left = Cm(3.5)
+      top = Cm(3.0)
+      height = Cm(14.5)
+      width = Cm(30.0)
+      textBox = slide.shapes.add_textbox(left, top, height, width)
+      textBox.text_frame.text = text
+      self._logger.info("Title page is added ({0}, {1})".format(title, text))
+      return True
+    except:
+      raise SystemError
+      return False
+
+
     #titleOnlySlideLayout = self._presentation.slide_layouts[5]
     #slide = self._presentation.slides.add_slide(titleOnlySlideLayout)
     #titleShape = slide.shapes.title
@@ -231,6 +279,12 @@ class PresentationGenerator:
         If the finalization is not successfull, so the pptx file can not be written. 
 
       """
+    try:
+      self._presentation.save(self._outputFileName)
+      return True
+    except:
+      raise IOError
+      return False
     #self._presentation.save(self._fileName)
     #self._logger.info("Presentation is closed ({0})".format(self._fileName))
 
