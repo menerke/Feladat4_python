@@ -18,10 +18,6 @@ class Presentation:
             The name of the output pptx file.            
         templateFileName : str
             The name of the template file. 
-        Raises
-        ----------
-        TypeError
-            If the outputFileName is not a string.
         """
         self._logger = logging.getLogger(self.__class__.__name__)
         self._generator = PresentationGenerator(outputFileName,templateFileName)

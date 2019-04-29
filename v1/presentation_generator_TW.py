@@ -31,18 +31,19 @@ class PresentationGenerator:
             If the outputFileName has not .pptx extension or templateFileName has not .template extension.
         """
         self._logger = logging.getLogger(self.__class__.__name__)
-        if not type(outputFileName) or not type(templateFileName) is str:
+        if not type(outputFileName) is str or not type(templateFileName) is str:
             self._logger.error('Name of the file must be string.')
             raise TypeError
         else:
-            if outputFileName.endswith('.pptx') or templateFileName.endswith('.template'):
+            if outputFileName.endswith('.pptx') and templateFileName.endswith('.template'):
                 self._outputFileName = outputFileName
+                self._presentation = Presentation(templateFileName)
             else:
                 self._logger.error('The file extension is wrong.')
                 raise ValueError
+                exit()
 
-        self._presentation = Presentation(templateFileName)
-        self.outputFileName = outputFileName
+        
 
     def addTitle(self, layout, title, subTitle):
         """Generate the Title slide. 
