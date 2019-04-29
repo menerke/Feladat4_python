@@ -7,7 +7,7 @@ import re
 
 class Plotter:
 
-    def __init__(self,inputFile):
+    def __init__(self,data):
         """Initialization.
 
         Set up the logger. Store the name of the input file.
@@ -28,26 +28,27 @@ class Plotter:
             If the configuration file contains wrong data.
 
         """
-        self._logger = logging.getLogger(self.__class__.__name__)
-        if not type(inputFile) is str:
-            self._logger.error('Name of Input file must be string')
-            raise TypeError
-        else:
-            self.inputFile = inputFile
+        # self._logger = logging.getLogger(self.__class__.__name__)
+        # if not type(inputFile) is str:
+        #     self._logger.error('Name of Input file must be string')
+        #     raise TypeError
+        # else:
+        #     self.inputFile = inputFile
 
-        try:
-            with open(inputFile) as inpf:
-                try:
-                    self.data = np.array(json.load(inpf)['presentation'])
-                except:
-                    self._logger.error('File contains bad data')
-                    raise ValueError
-        except IOError:
-            self._logger.error('Input file not found')
-            raise IOError
+        # try:
+        #     with open(inputFile) as inpf:
+        #         try:
+        #             self.data = np.array(json.load(inpf)['presentation'])
+        #         except:
+        #             self._logger.error('File contains bad data')
+        #             raise ValueError
+        # except IOError:
+        #     self._logger.error('Input file not found')
+        #     raise IOError
+        self.data = data
 
     def readXYData(self,dat):
-        with open(dat['content']) as inpf:
+        with open(self.data['content']) as inpf:
                     line = [i.strip() for i in inpf if i]
                     xy_data = re.finditer(r'(?:[+-]?\d+\.?\d*)',line[0])
                     x = []
@@ -85,15 +86,15 @@ class Plotter:
         IOError
             If the image file can not be written. 
         """
-        for dat in self.data:
-            if dat['type'] == 'plot':
-                self.x,self.y = self.readXYData(dat)
-                self.fig,self.ax = plt.subplots()
-                self.ax.plot(self.x,self.y)
-                self.ax.set_xlabel(dat['configuration']['x-label'])
-                self.ax.set_ylabel(dat['configuration']['y-label'])
-                self.ax.set_title(dat['title'])
-                self.fig.savefig(figName)
+        self.x,self.y = self.readXYData(dat)
+        self.fig,self.ax = plt.subplots()
+        self.ax.plot(self.x,self.y)
+        self.ax.set_xlabel(dat['configuration']['x-label'])
+        self.ax.set_ylabel(dat['configuration']['y-label'])
+        self.ax.set_title(dat['title'])
+        self.fig.savefig(figName)
+        self.fig.close()
+        return figName
 
 if __name__ == "__main__":
     plotter = Plotter('sample.json')

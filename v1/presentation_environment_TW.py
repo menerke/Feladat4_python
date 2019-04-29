@@ -1,6 +1,6 @@
 import logging
 
-from presentation_generator import PresentationGenerator
+from presentation_generator_TW import PresentationGenerator
 from presentation_formatter import PresentationFormatter
 
 class Presentation:
@@ -28,7 +28,7 @@ class Presentation:
     def layoutSelect(self,type):
         """Select the layout of the slide.
 
-        Accordint to the type of the slide, the function returns with a number to select the layout. The template presentation must be known.    
+        According to the type of the slide, the function returns with a number to select the layout. The template presentation must be known.    
 
         Parameters
         ----------
@@ -52,7 +52,7 @@ class Presentation:
     def generate(self,configFileName):
         """Read the configuration (JSON) file and act accordingly.
         
-        The configuration file should contain the type of the slide. The generate function call the appropriate functions accordind to the different types. 
+        The configuration file should contain the type of the slide. The generate function calls the appropriate functions accordind to the different types. 
         The configuration file usually contains every information needed to generate the slide, except the layout number. 
         The layout number should be chosen according to the type of the slide by using the layoutSelect. The layout number is an input for every function of the presentation generator.     
         But there are cases, when other opreations must be done before calling the slide generator. 
@@ -82,6 +82,22 @@ class Presentation:
             If the configuration file contains wrong data.
 
         """
+        presentationGenerator = PresentationGenerator('outputFileName')
+        try:
+            with open(configFileName) as inpf:
+                try:
+                    self.data = np.array(json.load(inpf)['presentation'])
+                except:
+                    self._logger.error('File contains bad data')
+                    raise ValueError
+        except IOError:
+            self._logger.error('Input file not found')
+            raise IOError
+        
+        for dat in self.data:
+            if dat['type'] == 'plot':
+                plotter = Plotter(dat)
+                figName = plotter.generatePlot('figure.png')
 
         #self._generator.addTitle("PYTHON oktatás", "Kaszás Gábor")
         
