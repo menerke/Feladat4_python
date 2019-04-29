@@ -1,13 +1,14 @@
 import logging
+import json
 
 from presentation_generator_TW import PresentationGenerator
-from presentation_formatter import PresentationFormatter
+from plotter_TW import Plotter
 
 class Presentation:
     """The main class to create the pptx. One function (generate) should go through the configuration (JSON) file, and call the appropriate module/object/function. 
     The output is the generated pptx file."""
 
-    def __init__(self,outputFileName):
+    def __init__(self,outputFileName,templateFileName):
         """Initialization.
 
         Set up the logger. Call the generator module with the name of the output file.
@@ -15,25 +16,25 @@ class Presentation:
         ----------
         outputFileName : str
             The name of the output pptx file.            
-
+        templateFileName : str
+            The name of the template file. 
         Raises
         ----------
         TypeError
             If the outputFileName is not a string.
-
         """
-        #self._generator = PresentationGenerator('PYTHON-Environment.pptx')
-        #self._formatter = PresentationFormatter()
+        self._logger = logging.getLogger(self.__class__.__name__)
+        self._generator = PresentationGenerator(outputFileName,templateFileName)
 
-    def layoutSelect(self,type):
+    def layoutSelect(self,stype):
         """Select the layout of the slide.
 
-        According to the type of the slide, the function returns with a number to select the layout. The template presentation must be known.    
+        According to the stype of the slide, the function returns with a number to select the layout. The template presentation must be known.    
 
         Parameters
         ----------
-        type : str
-            The type of the slide. 
+        stype : str
+            The stype of the slide. 
 
         Returns
         -------
@@ -43,11 +44,28 @@ class Presentation:
         Raises
         ----------
         TypeError
-            If the type is not a string.
+            If the stype is not a string.
 
         ValueError
-            If the type is not appropriate.
+            If the stype is not appropriate.
         """
+        if not type(stype) is str:
+            self._logger.error('The slide type must be string.')
+            raise TypeError
+
+        if stype == 'title':
+            return 0
+        elif stype == 'list':
+            return 1
+        elif stype == 'picture':
+            return 5
+        elif stype == 'plot':
+            return 5
+        elif stype == 'text':
+            return 5
+        else:
+            self._logger.error('There is an inaproppriate slide type.')
+            raise ValueError
 
     def generate(self,configFileName):
         """Read the configuration (JSON) file and act accordingly.
@@ -82,11 +100,10 @@ class Presentation:
             If the configuration file contains wrong data.
 
         """
-        presentationGenerator = PresentationGenerator('outputFileName')
         try:
             with open(configFileName) as inpf:
                 try:
-                    self.data = np.array(json.load(inpf)['presentation'])
+                    self.data = json.load(inpf)['presentation']
                 except:
                     self._logger.error('File contains bad data')
                     raise ValueError
@@ -95,24 +112,25 @@ class Presentation:
             raise IOError
         
         for dat in self.data:
-            if dat['type'] == 'plot':
-                plotter = Plotter(dat)
-                figName = plotter.generatePlot('figure.png')
-
-        #self._generator.addTitle("PYTHON oktatás", "Kaszás Gábor")
-        
-        #self._generator.addList("Fejlesztői környezet", "Szükséges szoftverek", 
-        #    [[1, "PYTHON v3.7.2"],
-        #     [2, "https://www.python.org/downloads/"],
-        #     [2, "https://www.python.org/downloads/release/python-372/"],
-        #     [1, "Visual Studio Code V.1.31.1 (legfrissebb)"],
-        #     [2, "https://code.visualstudio.com/"],
-        #     [1, "GIT v2.20.1 (legfrissebb)"],
-        #     [2, "https://git-scm.com/download/win"],
-        #     ])
+            if dat['type'] == 'text':
+                self._generator.addText(presentation.layoutSelect(dat['type']),dat['title'],dat['content'])
+            elif dat['type'] == 'title':
+                self._generator.addTitle(presentation.layoutSelect(dat['type']),dat['title'],dat['content'])
+            elif dat['type'] == 'list':
+                levels = []
+                text = []
+                for level in dat['content']:
+                    levels.append(level['level'])
+                    text.append(level['text'])
+                self._generator.addList(presentation.layoutSelect(dat['type']),dat['title'],levels,text)
+            elif dat['type'] == 'picture':
+                self._generator.addImage(presentation.layoutSelect(dat['type']),dat['title'],dat['content'])
+            elif dat['type'] == 'plot':
+                plotImage = Plotter(dat['content']).generatePlot(dat['content'],dat['configuration']['x-label'],dat['configuration']['y-label'])
+                self._generator.addPlot(presentation.layoutSelect(dat['type']),dat['title'],plotImage)
+        self._generator.finalize()
 
 if __name__ == "__main__":
-    pass
-    #logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level = logging.INFO)
-    #presentation = Presentation()
-    #presentation.generate()
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level = logging.INFO)
+    presentation = Presentation('PYTHON-Environment.pptx','PYTHON-Course.template')
+    presentation.generate("sample.json")

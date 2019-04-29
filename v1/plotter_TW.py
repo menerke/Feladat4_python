@@ -6,8 +6,7 @@ import re
 
 
 class Plotter:
-
-    def __init__(self,data):
+    def __init__(self,inputFile):
         """Initialization.
 
         Set up the logger. Store the name of the input file.
@@ -23,51 +22,55 @@ class Plotter:
 
         IOError
             If the file can not be read. 
-
-        ValueError
-            If the configuration file contains wrong data.
-
         """
-        # self._logger = logging.getLogger(self.__class__.__name__)
-        # if not type(inputFile) is str:
-        #     self._logger.error('Name of Input file must be string')
-        #     raise TypeError
-        # else:
-        #     self.inputFile = inputFile
+        self._logger = logging.getLogger(self.__class__.__name__)
 
-        # try:
-        #     with open(inputFile) as inpf:
-        #         try:
-        #             self.data = np.array(json.load(inpf)['presentation'])
-        #         except:
-        #             self._logger.error('File contains bad data')
-        #             raise ValueError
-        # except IOError:
-        #     self._logger.error('Input file not found')
-        #     raise IOError
-        self.data = data
+        if not type(inputFile) is str:
+             self._logger.error('Name of Input file must be string')
+             raise TypeError
+        else:
+            self.inputFile = inputFile
+        try:
+            with open(inputFile) as inpf:
+                pass
+        except:
+            self._logger.error('Input file not found')
+            raise IOError
+    
+    def readXYData(self,inputFile):
+        """Read the x,y data sets.
+        
+        Read the data from the input file. Return a tuple which contains the x,y data.
+        Parameters
+        ----------
+        inputFile : str
+            The name of the input file. It contains the data to be plotted.
 
-    def readXYData(self,dat):
-        with open(self.data['content']) as inpf:
+        Returns
+        -------
+        x,y
+            A tuple contains the x,y data.
+        """
+        with open(inputFile) as inpf:
                     line = [i.strip() for i in inpf if i]
                     xy_data = re.finditer(r'(?:[+-]?\d+\.?\d*)',line[0])
                     x = []
                     y= []
                     for n,xy in enumerate(xy_data,1):
                         if n%2 == 1:
-                            x.append(xy.group(0))
+                            x.append(float(xy.group(0)))
                         if n%2 == 0:
-                            y.append(xy.group(0))
+                            y.append(float(xy.group(0)))
         return (x,y)
-    
 
-
-    def generatePlot(self,figName):
+    def generatePlot(self,inputFile,xLabel,yLabel):
         """Generate a plot and save as an image.
         
-        Read the data from the input file. Create a plot by using the given labels. Save the plot as an image. Return the name of the image file. 
+        Read the data from the input file by using an another function. Create a plot by using the given labels. Save the plot as an image. Return the name of the image file. 
         Parameters
         ----------
+        inputFile : str
+            The name of the input file. It contains the data to be plotted.
         xLabel : str
             The label of the x axis.
         yLabel : str
@@ -86,16 +89,23 @@ class Plotter:
         IOError
             If the image file can not be written. 
         """
-        self.x,self.y = self.readXYData(dat)
-        self.fig,self.ax = plt.subplots()
-        self.ax.plot(self.x,self.y)
-        self.ax.set_xlabel(dat['configuration']['x-label'])
-        self.ax.set_ylabel(dat['configuration']['y-label'])
-        self.ax.set_title(dat['title'])
-        self.fig.savefig(figName)
-        self.fig.close()
-        return figName
 
-if __name__ == "__main__":
-    plotter = Plotter('sample.json')
-    plotter.generatePlot('figname.png')
+        if not type(xLabel) or not type(yLabel) is str:
+            self._logger.error('The labels must be strings.')
+            raise TypeError
+
+        plotter = Plotter(inputFile)
+        data = plotter.readXYData(inputFile)
+        x = np.array(data[0])
+        y = np.array(data[1])
+        fig,ax = plt.subplots()
+        ax.plot(x,y)
+        ax.set_xlabel(xLabel)
+        ax.set_ylabel(yLabel)
+        figName = 'figure.png'
+        try:
+            fig.savefig(figName)
+        except:
+            self._logger.error('The figure can not be written.')
+            raise IOError
+        return figName

@@ -4,15 +4,14 @@ from pptx import Presentation
 from pptx.util import Inches
 from pptx.util import Cm
 
-from presentation_io import PresentationIO
+#from presentation_io import PresentationIO
 
 class PresentationGenerator:
     """The generator class.
 
     It creates different type of slides. The available types: Title, Text, Image, List, Plot.
     """
-
-    def __init__(self, outputFileName):
+    def __init__(self, outputFileName,templateFileName):
         """Initialization.
         
         Set up the logger. Give the template file of the presentation.
@@ -21,43 +20,29 @@ class PresentationGenerator:
         ----------
         outputFileName : str
             The name of the output file.
-
+        templateFileName : str
+            The name of the template file. 
         Raises
         ----------
         TypeError
-            If the outputFileName is not a string.
-
-        IOError
-            If the file can not be written. 
+            If the outputFileName or templateFileName is not a string.
 
         ValueError
-            If the outputFileName has not .pptx extension.
-        
+            If the outputFileName has not .pptx extension or templateFileName has not .template extension.
         """
         self._logger = logging.getLogger(self.__class__.__name__)
-        if not type(outputFileName) is str:
-            self._logger.error('Name of Output file must be string')
+        if not type(outputFileName) or not type(templateFileName) is str:
+            self._logger.error('Name of the file must be string.')
             raise TypeError
         else:
-            if outputFileName.endswith('.pptx'):
+            if outputFileName.endswith('.pptx') or templateFileName.endswith('.template'):
                 self._outputFileName = outputFileName
             else:
+                self._logger.error('The file extension is wrong.')
                 raise ValueError
 
-        """
-        EZ a rész bizonytalan, nem látom az IOError milyen fájl írást ellenőrizzen, nem elég ez a "    def finalize(self):"-ben?
-        try:
-            VALAMI
-        except IOError as e:
-            self._logger.error("I/O error({0}): {1}".format(e.errno, e.strerror))    
-        """
-
-        self._presentation = Presentation(self._outputFileName)
-
-        #self._logger = logging.getLogger(self.__class__.__name__)
-        #self._io = PresentationIO()
-        #self._presentation = Presentation("PYTHON-Course.template")
-        #self._fileName = fileName
+        self._presentation = Presentation(templateFileName)
+        self.outputFileName = outputFileName
 
     def addTitle(self, layout, title, subTitle):
         """Generate the Title slide. 
@@ -76,7 +61,7 @@ class PresentationGenerator:
         Returns
         -------
         bool
-            True if the slide generation is successful, False otherwise.
+            True if the slide generation is successful.
 
         Raises
         ----------
@@ -91,15 +76,8 @@ class PresentationGenerator:
             self._logger.info("Title page is added ({0}, {1})".format(title, subTitle))
             return True
         except:
+            self._logger.error("The slide generation is not successful.")
             raise SystemError
-            return False
-        #titleSlideLayout = self._presentation.slide_layouts[0]
-        #slide = self._presentation.slides.add_slide(titleSlideLayout)
-        #titleShape = slide.shapes.title
-        #subTitleShape = slide.placeholders[1]
-        #titleShape.text = title
-        #subTitleShape.text = subTitle
-        #self._logger.info("Title page is added ({0}, {1})".format(title, subTitle))
 
     def addText(self, layout, title, text):
         """Generate the Text slide. 
@@ -118,7 +96,7 @@ class PresentationGenerator:
         Returns
         -------
         bool
-            True if the slide generation is successful, False otherwise.
+            True if the slide generation is successful.
 
         Raises
         ----------
@@ -129,32 +107,20 @@ class PresentationGenerator:
         slideLayout = self._presentation.slide_layouts[layout]
         try:
             slide = self._presentation.slides.add_slide(slideLayout)
-            slide.shapes.title.text = title
-            slide.placeholders[1].text = text
+            titleShape = slide.shapes.title
+            titleShape.text = title
             left = Cm(3.5)
             top = Cm(3.0)
             height = Cm(14.5)
             width = Cm(30.0)
             textBox = slide.shapes.add_textbox(left, top, height, width)
-            textBox.text_frame.text = text
+            textFrame = textBox.text_frame
+            textFrame.text = text
             self._logger.info("Title page is added ({0}, {1})".format(title, text))
             return True
         except:
+            self._logger.error("The slide generation is not successful.")
             raise SystemError
-            return False
-
-
-        #titleOnlySlideLayout = self._presentation.slide_layouts[5]
-        #slide = self._presentation.slides.add_slide(titleOnlySlideLayout)
-        #titleShape = slide.shapes.title
-        #titleShape.text = title
-        #left = Cm(3.5)
-        #top = Cm(3.0)
-        #height = Cm(14.5)
-        #width = Cm(30.0)
-        #textBox = slide.shapes.add_textbox(left, top, height, width)
-        #textFrame = textBox.text_frame
-        #textFrame.text = text
 
     def addList(self, layout, title, levels, text):
         """Generate the List slide. 
@@ -176,29 +142,34 @@ class PresentationGenerator:
         Returns
         -------
         bool
-            True if the slide generation is successful, False otherwise.
+            True if the slide generation is successful.
 
         Raises
         ----------
         SystemError
             If the slide generation is not successful. 
-        
         """
-        #bulletSlideLayout = self._presentation.slide_layouts[1]
-        #slide = self._presentation.slides.add_slide(bulletSlideLayout)
-        #shapes = slide.shapes
-        #titleShape = shapes.title
-        #bodyShape = shapes.placeholders[1]
-        #titleShape.text = title
-        #textFrame = bodyShape.text_frame
-        #textFrame.text = text
-        #for line in lines:
-        #    paragraph = textFrame.add_paragraph()
-        #    paragraph.level = line[0]
-        #    paragraph.text = line[1]
+
+        slideLayout = self._presentation.slide_layouts[layout]
+        try:
+            slide = self._presentation.slides.add_slide(slideLayout)
+            shapes = slide.shapes
+            titleShape = shapes.title
+            bodyShape = shapes.placeholders[1]
+            titleShape.text = title
+            textFrame = bodyShape.text_frame
+            lines = [levels,text]
+            for i in range(len(levels)):
+                paragraph = textFrame.add_paragraph()
+                paragraph.level = lines[0][i]
+                paragraph.text = lines[1][i]
+            self._logger.info("List page is added.")
+        except:
+            self._logger.error("The slide generation is not successful.")
+            raise SystemError
     
     def addImage(self, layout, title, fileName):
-            """Generate the Image slide. 
+        """Generate the Image slide. 
             
             The slide contains a title and an image. It should select the layout first, then add a new slide and write the title and add the image.
             
@@ -214,25 +185,28 @@ class PresentationGenerator:
             Returns
             -------
             bool
-                True if the slide generation is successful, False otherwise.
+                True if the slide generation is successful.
 
             Raises
             ----------
             SystemError
                 If the slide generation is not successful. 
-         
-            """
-        #titleOnlySlideLayout = self._presentation.slide_layouts[5]
-        #slide = self._presentation.slides.add_slide(titleOnlySlideLayout)
-        #titleShape = slide.shapes.title
-        #titleShape.text = title
-        #left = Cm(3.5)
-        #top = Cm(3.0)
-        #picture = slide.shapes.add_picture(fileName, left, top)
-        #self._logger.info("Image page is added ({0}, {1})".format(title, fileName))
+        """
+        slideLayout = self._presentation.slide_layouts[layout]
+        try:
+            slide = self._presentation.slides.add_slide(slideLayout)
+            titleShape = slide.shapes.title
+            titleShape.text = title
+            left = Cm(3.5)
+            top = Cm(3.0)
+            slide.shapes.add_picture(fileName, left, top)
+            self._logger.info("Image page is added ({0}, {1})".format(title, fileName))
+        except:
+            self._logger.error("The slide generation is not successful.")
+            raise SystemError
 
     def addPlot(self, layout, title, plotName):
-        """Generate the Plot slide. 
+        """Generate the Plot slide.
         
         The slide contains a title and an image named plotName. It should select the layout first, then add a new slide and write the title and add the image.
                     
@@ -256,14 +230,17 @@ class PresentationGenerator:
             If the slide generation is not successful. 
 
         """
-        #titleOnlySlideLayout = self._presentation.slide_layouts[5]
-        #slide = self._presentation.slides.add_slide(titleOnlySlideLayout)
-        #titleShape = slide.shapes.title
-        #titleShape.text = title
-        #left = Cm(3.5)
-        #top = Cm(3.0)
-        #picture = slide.shapes.add_picture(plotName, left, top)
-        #self._logger.info("Image page is added ({0}, {1})".format(title, plotName))
+        slideLayout = self._presentation.slide_layouts[layout]
+        try:
+            slide = self._presentation.slides.add_slide(slideLayout)
+            titleShape = slide.shapes.title
+            titleShape.text = title
+            left = Cm(3.5)
+            top = Cm(3.0)
+            slide.shapes.add_picture(plotName, left, top)
+            self._logger.info("Plot page is added ({0}, {1})".format(title, plotName))
+        except:
+            raise SystemError
 
     def finalize(self):
         """Save the created pptx.
@@ -271,35 +248,15 @@ class PresentationGenerator:
         Returns
         -------
         bool
-            True if the slide generation is successful, False otherwise.
+            True if the slide generation is successful.
 
         Raises
         ----------
         IOError
             If the finalization is not successfull, so the pptx file can not be written. 
-
         """
         try:
             self._presentation.save(self._outputFileName)
             return True
         except:
             raise IOError
-            return False
-        #self._presentation.save(self._fileName)
-        #self._logger.info("Presentation is closed ({0})".format(self._fileName))
-
-if __name__ == "__main__":
-    pass
-    # logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s %(filename)s(%(lineno)s) %(message)s", level = logging.INFO)
-    #logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level = logging.INFO)
-    #generator = PresentationGenerator('PYTHON-Course-1.pptx')
-    #generator.addTitle("PYTHON Course", "Created by Gábor Kaszás")
-    #generator.addText("Sample Text", generator._io.loadTextFile("presentation/presentation_io.py")[0:200])
-    #generator.addImage("Sample Code", "presentation_formatter.png")
-    #generator.addList("Sample Title", "Sample Text", 
-    #    [[1, "First Level"], [2, "Second Level"], [1, "First Level"]])
-    #generator.addTable("Sample Table", [["Cell 1", "Cell 2"], ["Cell 3", "Cell 4"]])
-    #generator.finalize()
-
-    # References:
-    # https://python-pptx.readthedocs.io/en/latest/user/quickstart.html
