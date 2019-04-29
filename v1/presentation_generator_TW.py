@@ -165,6 +165,7 @@ class PresentationGenerator:
                 paragraph.level = lines[0][i]
                 paragraph.text = lines[1][i]
             self._logger.info("List page is added.")
+            return True
         except:
             self._logger.error("The slide generation is not successful.")
             raise SystemError
@@ -202,6 +203,7 @@ class PresentationGenerator:
             top = Cm(3.0)
             slide.shapes.add_picture(fileName, left, top)
             self._logger.info("Image page is added ({0}, {1})".format(title, fileName))
+            return True
         except:
             self._logger.error("The slide generation is not successful.")
             raise SystemError
@@ -240,6 +242,7 @@ class PresentationGenerator:
             top = Cm(3.0)
             slide.shapes.add_picture(plotName, left, top)
             self._logger.info("Plot page is added ({0}, {1})".format(title, plotName))
+            return True
         except:
             raise SystemError
 
