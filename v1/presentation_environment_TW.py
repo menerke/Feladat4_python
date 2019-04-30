@@ -11,7 +11,8 @@ class Presentation:
     def __init__(self,outputFileName,templateFileName):
         """Initialization.
 
-        Set up the logger. Call the generator module with the name of the output file.
+        Set up the logger. Call the generator module with the name of the output file and the name of the template file.
+
         Parameters
         ----------
         outputFileName : str
@@ -86,25 +87,21 @@ class Presentation:
 
         Raises
         ----------
-        TypeError
-            If the outputFileName is not a string.
-
         IOError
             If the config file can not be read. If the pptx file can not be written.
 
         ValueError
             If the configuration file contains wrong data.
-
         """
         try:
             with open(configFileName) as inpf:
                 try:
                     self.data = json.load(inpf)['presentation']
                 except:
-                    self._logger.error('File contains bad data')
+                    self._logger.error('File contains bad data.')
                     raise ValueError
         except IOError:
-            self._logger.error('Input file not found')
+            self._logger.error('Input file not found.')
             raise IOError
         
         for dat in self.data:
@@ -124,7 +121,13 @@ class Presentation:
             elif dat['type'] == 'plot':
                 plotImage = Plotter(dat['content']).generatePlot(dat['content'],dat['configuration']['x-label'],dat['configuration']['y-label'])
                 self._generator.addPlot(presentation.layoutSelect(dat['type']),dat['title'],plotImage)
-        self._generator.finalize()
+        try:
+            self._generator.finalize()
+            self._logger.info('Finalization is succesfull.')
+            return(True)
+        except: 
+            self._logger.error('Finalization is not succesfull')
+            return(False)
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level = logging.INFO)

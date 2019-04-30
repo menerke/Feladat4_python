@@ -105,6 +105,7 @@ class Plotter:
         figName = 'figure.png'
         try:
             fig.savefig(figName)
+            self._logger.error('The figure is saved.')
         except:
             self._logger.error('The figure can not be written.')
             raise IOError
