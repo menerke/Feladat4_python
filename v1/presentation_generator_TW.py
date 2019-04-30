@@ -41,7 +41,7 @@ class PresentationGenerator:
             else:
                 self._logger.error('The file extension is wrong.')
                 raise ValueError
-                exit()
+
 
         
 
