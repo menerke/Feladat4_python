@@ -14,7 +14,7 @@ class PresentationGenerator:
     def __init__(self, outputFileName,templateFileName):
         """Initialization.
         
-        Set up the logger. Give the template file of the presentation.
+        Set up the logger. Give the name of the output file and the template file of the presentation.
 
         Parameters
         ----------
