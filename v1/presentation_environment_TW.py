@@ -1,7 +1,7 @@
 import logging
 import json
 
-from presentation_generator_TW import PresentationGenerator
+import presentation_generator_TW
 from plotter_TW import Plotter
 
 class Presentation:
@@ -20,7 +20,7 @@ class Presentation:
             The name of the template file. 
         """
         self._logger = logging.getLogger(self.__class__.__name__)
-        self._generator = PresentationGenerator(outputFileName,templateFileName)
+        self._generator = presentation_generator_TW.PresentationGenerator(outputFileName,templateFileName)
 
     def layoutSelect(self,stype):
         """Select the layout of the slide.
